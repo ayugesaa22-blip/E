@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SundaSmart V6.1 - Final Integration</title>
+    <title>SundaSmart V6.1 - Final Jawara</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -12,24 +12,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 
     <style>
-        :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --wa-me: #dcf8c6; --wa-aki: #ffffff; }
+        :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
         body { font-family: 'Poppins', sans-serif; background-color: #000; margin: 0; color: var(--text); overflow-x: hidden; border-left: 10px solid var(--primary); border-right: 10px solid var(--primary); }
         .phone-container { width: 100%; max-width: 450px; min-height: 100vh; background: var(--bg); position: relative; margin: auto; display: flex; flex-direction: column; }
-        
-        /* AUTH & LOADING */
         #authScreen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; padding: 40px; text-align: center; }
         #loadingScreen { display:none; position:fixed; inset:0; background:var(--bg); z-index:2000; flex-direction:column; align-items:center; justify-content:center; }
-        
         .page { display: none; padding: 20px; padding-bottom: 100px; animation: fadeIn 0.3s; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         header { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 25px 20px; border-radius: 0 0 25px 25px; text-align: center; border-bottom: 4px solid var(--accent); }
         .card { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--secondary); }
-        
-        /* AI SCAN UI */
         #webcam { width: 100%; border-radius: 15px; display: none; margin-top: 10px; border: 2px solid var(--accent); }
-        #scanResultBox { background: var(--accent); color: white; padding: 10px; border-radius: 10px; margin-top: 10px; display: none; font-size: 14px; }
-
-        /* NAV & BUTTONS */
-        nav { position: fixed; bottom: 0; width: 100%; max-width: 450px; height: 75px; background: #1e293b; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #334
+        #scanResultBox { background: var(--accent); color: white;
