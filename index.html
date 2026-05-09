@@ -2,50 +2,51 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SundaSmart V8.0 - AI Spesifik</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SundaSmart V9.0 - Smart Sense</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
     <style>
         :root { --primary: #1b5e20; --accent: #ffa000; --bg: #0f172a; }
-        body { font-family: sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; }
+        body { font-family: sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
         .container { width: 100%; max-width: 450px; background: #1e293b; min-height: 100vh; padding: 20px; box-sizing: border-box; text-align: center; }
-        .card { background: #0f172a; padding: 20px; border-radius: 20px; border: 2px solid #334155; margin-top: 20px; }
-        #webcam { width: 100%; border-radius: 15px; display: none; border: 3px solid var(--accent); }
-        button { border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        .card { background: #0f172a; padding: 15px; border-radius: 20px; border: 2px solid #334155; margin-top: 15px; }
+        #webcam { width: 100%; border-radius: 15px; display: none; border: 3px solid var(--accent); margin-bottom: 10px; }
+        button { border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
         .btn-main { background: var(--accent); color: white; }
-        .result-box { background: var(--primary); padding: 15px; border-radius: 15px; margin-top: 15px; display: none; border-bottom: 5px solid var(--accent); }
-        .sunda-text { font-size: 26px; color: #fff; display: block; font-weight: bold; margin: 5px 0; }
-        .info-ai { font-size: 12px; color: #94a3b8; }
+        .result-box { background: var(--primary); padding: 15px; border-radius: 15px; border-bottom: 5px solid white; text-align: center; }
+        .sunda-text { font-size: 28px; color: #fff; display: block; font-weight: bold; text-transform: uppercase; }
+        .eng-sub { font-size: 12px; color: #a5d6a7; font-style: italic; }
     </style>
 </head>
 <body>
 <div class="container">
     <div id="loginSection">
-        <h1 style="color: #4caf50;">🌿 SundaSmart</h1>
-        <button class="btn-main" onclick="startApp()">MULAI SCAN AI</button>
+        <h1 style="font-size: 50px; margin-bottom: 0;">🌿</h1>
+        <h1 style="color: #4caf50; margin-top: 0;">SundaSmart</h1>
+        <button class="btn-main" onclick="startApp()">MASUK APLIKASI</button>
     </div>
 
     <div id="homeSection" style="display:none;">
-        <h2 id="greet">Sampurasun!</h2>
-        <div id="aiStatus" style="color:#4caf50; font-size:12px;">⌛ Menghubungkan Otak AI...</div>
+        <div id="aiStatus" style="background:#334155; padding:5px; border-radius:10px; font-size:12px; color:#4caf50;">⌛ Loading Otak AI...</div>
         
         <div class="card">
-            <video id="webcam" autoplay playsinline></video>
-            <div id="resultBox" class="result-box">
-                <span class="info-ai">Terdeteksi: <b id="detectEng">...</b></span>
-                <span class="sunda-text" id="detectSun">Mencari...</span>
-                <button onclick="speak()" style="width:auto; padding:5px 15px; font-size:12px; margin-top:5px; background:#334155; color:white;">🔊 Dengerin Suara</button>
+            <video id="webcam" autoplay playsinline muted></video>
+            
+            <div id="resultBox" class="result-box" style="display:none;">
+                <span class="eng-sub">AI Detect: <b id="detectEng">Scanning...</b></span>
+                <span class="sunda-text" id="detectSun">MENCARI...</span>
             </div>
+
             <button id="btnScan" class="btn-main" onclick="toggleScan()" disabled>AKTIFKAN KAMERA</button>
         </div>
+        <p style="font-size: 11px; color: #64748b; margin-top: 20px;">Arahkan ke: Tembok, Kaki, Sepatu, Botol, atau HP</p>
     </div>
 </div>
 
 <script>
-    // Config asli
     const firebaseConfig = {
       apiKey: "AIzaSyCJomw3JHyUdncNlghrqjVedVO6UKelTY0",
       authDomain: "sundasmart-7e792.firebaseapp.com",
@@ -55,23 +56,19 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // KAMUS SUPER SPESIFIK
+    // KAMUS VERSI 9.0 - LEBIH SENSITIF
     const kamusSunda = [
-        { keys: ['wall', 'brick'], sunda: 'Témbok' },
-        { keys: ['bottle', 'flask', 'water'], sunda: 'Botol / Gorol' },
-        { keys: ['shoe', 'sneaker', 'footwear'], sunda: 'Sapatu' },
-        { keys: ['sandal', 'flip-flop'], sunda: 'Sendal / Capit' },
-        { keys: ['leg', 'foot', 'toe'], sunda: 'Suku / Sampean' },
-        { keys: ['hand', 'arm', 'finger'], sunda: 'Leungeun / Panangan' },
-        { keys: ['cell phone', 'phone', 'ipod'], sunda: 'HP / Telepon' },
-        { keys: ['laptop', 'notebook', 'computer'], sunda: 'Laptop' },
-        { keys: ['person', 'man', 'woman'], sunda: 'Jalmi / Jelema' },
-        { keys: ['watch', 'clock'], sunda: 'Arloji / Jam' },
-        { keys: ['shirt', 't-shirt', 'jersey'], sunda: 'Acuk / Baju' },
-        { keys: ['chair', 'stool', 'seat'], sunda: 'Korsi / Diuk' },
-        { keys: ['table', 'desk'], sunda: 'Méja' },
-        { keys: ['door', 'entrance'], sunda: 'Panto' },
-        { keys: ['cat', 'kitty'], sunda: 'Ucing' }
+        { keys: ['wall', 'tile', 'brick', 'structure'], sunda: 'TÉMBOK' },
+        { keys: ['bottle', 'flask', 'water', 'container', 'beer'], sunda: 'BOTOL / GOROL' },
+        { keys: ['shoe', 'sneaker', 'footwear', 'slipper', 'boot'], sunda: 'SAPATU' },
+        { keys: ['foot', 'leg', 'toe', 'limb', 'human', 'skin'], sunda: 'SUKU / SAMPEAN' },
+        { keys: ['hand', 'finger', 'arm', 'wrist'], sunda: 'LEUNGEUN' },
+        { keys: ['phone', 'cellular', 'mobile', 'ipod'], sunda: 'HP / TELEPON' },
+        { keys: ['laptop', 'computer', 'screen', 'monitor'], sunda: 'KOMPUTER' },
+        { keys: ['person', 'man', 'woman', 'face'], sunda: 'JALMI / JELEMA' },
+        { keys: ['watch', 'clock'], sunda: 'ARLOJI' },
+        { keys: ['chair', 'seat', 'furniture'], sunda: 'KORSI' },
+        { keys: ['table', 'desk', 'wood'], sunda: 'MÉJA' }
     ];
 
     let model, isScanning = false;
@@ -79,18 +76,23 @@
     async function startApp() {
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('homeSection').style.display = 'block';
-        model = await mobilenet.load();
-        document.getElementById('aiStatus').innerText = "✅ AI Siap!";
-        document.getElementById('btnScan').disabled = false;
+        try {
+            model = await mobilenet.load();
+            document.getElementById('aiStatus').innerText = "✅ AI AKTIF! SIAP SCAN";
+            document.getElementById('btnScan').disabled = false;
+        } catch(e) { document.getElementById('aiStatus').innerText = "❌ Gagal muat AI. Refresh!"; }
     }
 
     async function toggleScan() {
         const v = document.getElementById('webcam');
+        const res = document.getElementById('resultBox');
         if (!isScanning) {
-            const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            v.srcObject = s; v.style.display = "block";
-            document.getElementById('resultBox').style.display = "block";
-            document.getElementById('btnScan').innerText = "STOP";
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            v.srcObject = stream;
+            v.style.display = "block";
+            res.style.display = "block";
+            document.getElementById('btnScan').innerText = "STOP SCAN";
+            document.getElementById('btnScan').style.background = "#ef4444";
             isScanning = true;
             detect();
         } else { location.reload(); }
@@ -99,26 +101,23 @@
     async function detect() {
         if (!isScanning) return;
         const v = document.getElementById('webcam');
-        const p = await model.classify(v);
-        let eng = p[0].className.toLowerCase();
-        document.getElementById('detectEng').innerText = eng;
-        
-        let hasil = "Duka naon...";
-        for (let item of kamusSunda) {
-            if (item.keys.some(k => eng.includes(k))) {
-                hasil = item.sunda;
-                break;
+        try {
+            const p = await model.classify(v);
+            let eng = p[0].className.toLowerCase();
+            document.getElementById('detectEng').innerText = eng;
+            
+            let hasil = "DUKA NAON...";
+            // Cek kecocokan kunci
+            for (let item of kamusSunda) {
+                if (item.keys.some(k => eng.includes(k))) {
+                    hasil = item.sunda;
+                    break;
+                }
             }
-        }
-        document.getElementById('detectSun').innerText = hasil;
-        setTimeout(detect, 1000);
-    }
-
-    function speak() {
-        let txt = document.getElementById('detectSun').innerText;
-        let msg = new SpeechSynthesisUtterance(txt);
-        msg.lang = 'id-ID';
-        window.speechSynthesis.speak(msg);
+            document.getElementById('detectSun').innerText = hasil;
+        } catch(err) { console.log("AI Thinking..."); }
+        
+        setTimeout(detect, 800); // Scan lebih cepet (0.8 detik)
     }
 </script>
 </body>
