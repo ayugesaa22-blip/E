@@ -3,103 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SundaSmart V6.2 - Guest Mode</title>
+    <title>SundaSmart V7.5 - Spesifik Scan</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
     
     <style>
-        :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; --text: #f8fafc; }
-        body { font-family: sans-serif; background-color: var(--bg); margin: 0; color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .phone-container { width: 100%; max-width: 400px; background: #1e293b; border-radius: 25px; padding: 30px; border: 2px solid var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; }
+        body { font-family: sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 450px; background: #1e293b; padding: 20px; box-sizing: border-box; text-align: center; }
         .hidden { display: none; }
-        h1 { color: var(--secondary); margin-bottom: 5px; }
-        .btn { border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 14px; transition: 0.3s; }
-        .btn-google { background: white; color: #444; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-guest { background: var(--accent); color: white; }
-        .btn-logout { background: #ef4444; color: white; margin-top: 30px; }
-        .status-badge { background: #334155; padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #94a3b8; display: inline-block; margin-bottom: 20px; }
-        .icon { font-size: 50px; margin-bottom: 10px; }
+        .card { background: #0f172a; padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
+        #webcam { width: 100%; border-radius: 15px; display: none; border: 2px solid var(--accent); margin-top: 10px; }
+        button { border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .btn-main { background: var(--accent); color: white; }
+        .result-box { background: var(--primary); padding: 15px; border-radius: 10px; margin-top: 10px; display: none; border-left: 5px solid white; }
+        .sunda-text { font-size: 22px; color: #fff; display: block; margin-top: 5px; text-shadow: 1px 1px #000; }
     </style>
 </head>
 <body>
 
-<div class="phone-container">
+<div class="container">
     <div id="loginSection">
-        <div class="icon">🌿</div>
-        <h1>SundaSmart</h1>
-        <p style="color: #94a3b8; font-size: 14px;">Aplikasi Budaya Bogor</p>
-        
-        <div style="margin-top: 40px;">
-            <button class="btn btn-google" onclick="loginGoogle()">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18"> Masuk dengan Google
-            </button>
-            
-            <div style="margin: 20px 0; color: #64748b; font-size: 12px;">— ATAU —</div>
-            
-            <button class="btn btn-guest" onclick="loginGuest()">Masuk sebagai Tamu</button>
-        </div>
+        <h1>🌿 SundaSmart</h1>
+        <button class="btn-main" onclick="loginGuest()">MULAI SEKARANG</button>
     </div>
 
     <div id="homeSection" class="hidden">
-        <div class="status-badge" id="userStatus">Status: Member</div>
-        <div class="icon">✨</div>
         <h2 id="greet">Sampurasun!</h2>
-        <p style="color: #94a3b8;">Wilujeng Sumping di SundaSmart. Sekarang lo sudah bisa akses semua fitur budaya Bogor.</p>
-        
-        <div style="background: #0f172a; padding: 20px; border-radius: 15px; margin-top: 20px; border-left: 4px solid var(--accent);">
-            <p style="margin: 0; font-size: 13px;">💡 <b>Tips:</b> Gunakan fitur Scan AI (segera hadir) untuk belajar bahasa Sunda dari benda di sekitar lo!</p>
-        </div>
+        <div id="aiStatus" style="font-size: 12px; color: var(--secondary);">⌛ Loading AI...</div>
 
-        <button class="btn btn-logout" onclick="logout()">Keluar Aplikasi</button>
+        <div class="card">
+            <h3>📷 Smart Scan AI</h3>
+            <video id="webcam" autoplay playsinline></video>
+            
+            <div id="resultBox" class="result-box">
+                <span style="font-size: 12px; opacity: 0.8;">Benda Terdeteksi: <b id="detectEng">...</b></span>
+                <span class="sunda-text" id="detectSun">Mencari...</span>
+            </div>
+
+            <button id="btnScan" class="btn-main" onclick="toggleScan()" disabled>AKTIFKAN KAMERA</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // Konfigurasi Firebase lo (Gestira's Config)
     const firebaseConfig = {
       apiKey: "AIzaSyCJomw3JHyUdncNlghrqjVedVO6UKelTY0",
       authDomain: "sundasmart-7e792.firebaseapp.com",
       projectId: "sundasmart-7e792",
       storageBucket: "sundasmart-7e792.firebasestorage.app",
-      messagingSenderId: "1004706509586",
       appId: "1:1004706509586:web:091f09c916079362a2f9cb"
     };
-
-    // Inisialisasi
     firebase.initializeApp(firebaseConfig);
 
-    // Fungsi Login Google
-    function loginGoogle() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider)
-            .then((res) => {
-                showHome("Sampurasun, " + res.user.displayName + "!", "Member");
-            })
-            .catch((err) => {
-                alert("Waduh, gagal login: " + err.message);
-            });
+    // KAMUS SUNDA SUPER SPESIFIK (Banyakin di sini)
+    const kamusSunda = {
+        "wall": "Témbok",
+        "bottle": "Botol / Gorol",
+        "shoe": "Sapatu",
+        "sandal": "Sendal / Capit",
+        "foot": "Suku / Sampean",
+        "leg": "Suku / Sampean",
+        "hand": "Leungeun / Panangan",
+        "cell phone": "HP / Telepon",
+        "laptop": "Komputer jingjing",
+        "cup": "Cangkir",
+        "person": "Jalmi / Jelema",
+        "watch": "Arloji / Jam leungeun",
+        "shirt": "Acuk / Baju",
+        "chair": "Korsi",
+        "table": "Méja"
+    };
+
+    let model;
+    let isScanning = false;
+
+    async function initAI() {
+        model = await mobilenet.load();
+        document.getElementById('aiStatus').innerText = "✅ AI Aktif!";
+        document.getElementById('btnScan').disabled = false;
     }
 
-    // Fungsi Login Guest
     function loginGuest() {
-        showHome("Sampurasun, Tamu!", "Guest");
-    }
-
-    // Fungsi pindah layar
-    function showHome(message, status) {
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('homeSection').classList.remove('hidden');
-        document.getElementById('greet').innerText = message;
-        document.getElementById('userStatus').innerText = "Status: " + status;
+        initAI();
     }
 
-    // Fungsi Logout
-    function logout() {
-        firebase.auth().signOut().then(() => {
+    async function toggleScan() {
+        const video = document.getElementById('webcam');
+        const resBox = document.getElementById('resultBox');
+        if (!isScanning) {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            video.srcObject = stream;
+            video.style.display = "block";
+            resBox.style.display = "block";
+            document.getElementById('btnScan').innerText = "STOP";
+            isScanning = true;
+            startDetecting();
+        } else {
             location.reload();
-        });
+        }
+    }
+
+    async function startDetecting() {
+        if (!isScanning) return;
+        const video = document.getElementById('webcam');
+        const predictions = await model.classify(video);
+        
+        let engName = predictions[0].className.toLowerCase();
+        document.getElementById('detectEng').innerText = engName;
+        
+        let sundaResult = "Duka naon eta...";
+        
+        // Cek satu per satu di kamus
+        for (let key in kamusSunda) {
+            if (engName.includes(key)) {
+                sundaResult = kamusSunda[key];
+                break;
+            }
+        }
+        
+        document.getElementById('detectSun').innerText = sundaResult;
+        setTimeout(startDetecting, 1500); // Scan tiap 1.5 detik
     }
 </script>
-
 </body>
 </html>
