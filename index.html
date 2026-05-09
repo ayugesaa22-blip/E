@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SundaSmart V7.5 - Spesifik Scan</title>
+    <title>SundaSmart V7.5 - Final Fix</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -11,31 +11,38 @@
     
     <style>
         :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; }
-        body { font-family: sans-serif; background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 450px; background: #1e293b; padding: 20px; box-sizing: border-box; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: white; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 450px; background: #1e293b; padding: 25px; box-sizing: border-box; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .hidden { display: none; }
-        .card { background: #0f172a; padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
-        #webcam { width: 100%; border-radius: 15px; display: none; border: 2px solid var(--accent); margin-top: 10px; }
-        button { border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .card { background: #0f172a; padding: 20px; border-radius: 20px; margin-top: 20px; border: 2px solid #334155; }
+        #webcam { width: 100%; border-radius: 15px; display: none; border: 3px solid var(--accent); margin-top: 15px; }
+        button { border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 16px; transition: 0.3s; }
+        .btn-google { background: white; color: #444; }
         .btn-main { background: var(--accent); color: white; }
-        .result-box { background: var(--primary); padding: 15px; border-radius: 10px; margin-top: 10px; display: none; border-left: 5px solid white; }
-        .sunda-text { font-size: 22px; color: #fff; display: block; margin-top: 5px; text-shadow: 1px 1px #000; }
+        .result-box { background: var(--primary); padding: 15px; border-radius: 15px; margin-top: 15px; display: none; border-bottom: 5px solid var(--accent); }
+        .sunda-text { font-size: 24px; color: #fff; display: block; margin-top: 5px; font-weight: bold; }
+        #aiStatus { font-size: 13px; color: var(--secondary); margin-bottom: 10px; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="loginSection">
-        <h1>🌿 SundaSmart</h1>
-        <button class="btn-main" onclick="loginGuest()">MULAI SEKARANG</button>
+        <h1 style="font-size: 40px; margin-bottom: 10px;">🌿</h1>
+        <h1 style="color: var(--secondary); margin-top: 0;">SundaSmart</h1>
+        <p style="color: #94a3b8;">Aplikasi AI Budaya Bogor</p>
+        <button class="btn-google" onclick="loginGoogle()">Masuk dengan Google</button>
+        <button class="btn-main" onclick="loginGuest()" style="background:#475569">Masuk sebagai Tamu</button>
     </div>
 
     <div id="homeSection" class="hidden">
-        <h2 id="greet">Sampurasun!</h2>
-        <div id="aiStatus" style="font-size: 12px; color: var(--secondary);">⌛ Loading AI...</div>
+        <h2 id="greet" style="margin-bottom: 5px;">Sampurasun!</h2>
+        <div id="aiStatus">⌛ Memasang Chip AI...</div>
 
         <div class="card">
-            <h3>📷 Smart Scan AI</h3>
+            <h3 style="margin: 0;">📷 Smart Scan AI</h3>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 10px;">Arahkan ke Tembok, Sepatu, atau Botol!</p>
+            
             <video id="webcam" autoplay playsinline></video>
             
             <div id="resultBox" class="result-box">
@@ -43,12 +50,15 @@
                 <span class="sunda-text" id="detectSun">Mencari...</span>
             </div>
 
-            <button id="btnScan" class="btn-main" onclick="toggleScan()" disabled>AKTIFKAN KAMERA</button>
+            <button id="btnScan" class="btn-main" onclick="toggleScan()" disabled>AKTIFKAN KAMERA SCAN</button>
         </div>
+
+        <button onclick="location.reload()" style="background:transparent; color:#64748b; font-size:12px; border:1px solid #334155; margin-top: 40px;">Logout / Keluar</button>
     </div>
 </div>
 
 <script>
+    // Config Gestira
     const firebaseConfig = {
       apiKey: "AIzaSyCJomw3JHyUdncNlghrqjVedVO6UKelTY0",
       authDomain: "sundasmart-7e792.firebaseapp.com",
@@ -58,20 +68,18 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // KAMUS SUNDA SUPER SPESIFIK (Banyakin di sini)
     const kamusSunda = {
         "wall": "Témbok",
         "bottle": "Botol / Gorol",
         "shoe": "Sapatu",
-        "sandal": "Sendal / Capit",
+        "sandal": "Sendal",
         "foot": "Suku / Sampean",
         "leg": "Suku / Sampean",
         "hand": "Leungeun / Panangan",
         "cell phone": "HP / Telepon",
-        "laptop": "Komputer jingjing",
-        "cup": "Cangkir",
+        "laptop": "Laptop",
         "person": "Jalmi / Jelema",
-        "watch": "Arloji / Jam leungeun",
+        "watch": "Arloji / Jam Leungeun",
         "shirt": "Acuk / Baju",
         "chair": "Korsi",
         "table": "Méja"
@@ -80,29 +88,53 @@
     let model;
     let isScanning = false;
 
+    // Load AI Pas App kebuka
     async function initAI() {
-        model = await mobilenet.load();
-        document.getElementById('aiStatus').innerText = "✅ AI Aktif!";
-        document.getElementById('btnScan').disabled = false;
+        try {
+            model = await mobilenet.load();
+            document.getElementById('aiStatus').innerText = "✅ AI Siap Tempur!";
+            document.getElementById('btnScan').disabled = false;
+        } catch (e) {
+            document.getElementById('aiStatus').innerText = "❌ Gagal muat AI. Cek internet!";
+        }
     }
 
-    function loginGuest() {
+    function loginGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider).then((res) => {
+            showHome(res.user.displayName);
+        });
+    }
+
+    function loginGuest() { showHome("Tamu"); }
+
+    function showHome(name) {
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('homeSection').classList.remove('hidden');
+        document.getElementById('greet').innerText = "Sampurasun, " + name + "!";
         initAI();
     }
 
     async function toggleScan() {
         const video = document.getElementById('webcam');
         const resBox = document.getElementById('resultBox');
+        const btn = document.getElementById('btnScan');
+
         if (!isScanning) {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            video.srcObject = stream;
-            video.style.display = "block";
-            resBox.style.display = "block";
-            document.getElementById('btnScan').innerText = "STOP";
-            isScanning = true;
-            startDetecting();
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } 
+                });
+                video.srcObject = stream;
+                video.style.display = "block";
+                resBox.style.display = "block";
+                btn.innerText = "MATIKAN SCAN";
+                btn.style.background = "#ef4444";
+                isScanning = true;
+                startDetecting();
+            } catch (err) {
+                alert("Izin kamera ditolak!");
+            }
         } else {
             location.reload();
         }
@@ -117,17 +149,14 @@
         document.getElementById('detectEng').innerText = engName;
         
         let sundaResult = "Duka naon eta...";
-        
-        // Cek satu per satu di kamus
         for (let key in kamusSunda) {
             if (engName.includes(key)) {
                 sundaResult = kamusSunda[key];
                 break;
             }
         }
-        
         document.getElementById('detectSun').innerText = sundaResult;
-        setTimeout(startDetecting, 1500); // Scan tiap 1.5 detik
+        setTimeout(startDetecting, 1000); // Update tiap 1 detik
     }
 </script>
 </body>
