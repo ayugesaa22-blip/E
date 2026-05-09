@@ -3,23 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SundaSmart V6.1 - Final Jawara</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <title>SundaSmart V6 - Final</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 
     <style>
-        :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
-        body { font-family: 'Poppins', sans-serif; background-color: #000; margin: 0; color: var(--text); overflow-x: hidden; border-left: 10px solid var(--primary); border-right: 10px solid var(--primary); }
-        .phone-container { width: 100%; max-width: 450px; min-height: 100vh; background: var(--bg); position: relative; margin: auto; display: flex; flex-direction: column; }
-        #authScreen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; padding: 40px; text-align: center; }
-        #loadingScreen { display:none; position:fixed; inset:0; background:var(--bg); z-index:2000; flex-direction:column; align-items:center; justify-content:center; }
-        .page { display: none; padding: 20px; padding-bottom: 100px; animation: fadeIn 0.3s; }
+        :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; --text: #f8fafc; }
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; color: var(--text); }
+        .container { width: 100%; max-width: 450px; margin: auto; min-height: 100vh; position: relative; }
+        #authScreen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .page { display: none; padding: 20px; }
         .page.active { display: block; }
-        header { background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 25px 20px; border-radius: 0 0 25px 25px; text-align: center; border-bottom: 4px solid var(--accent); }
-        .card { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--secondary); }
+        button { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-top: 20px; cursor: pointer; }
         #webcam { width: 100%; border-radius: 15px; display: none; margin-top: 10px; border: 2px solid var(--accent); }
-        #scanResultBox { background: var(--accent); color: white;
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="authScreen">
+        <h1 style="color: var(--secondary);">🌿 SundaSmart</h1>
+        <p>Aplikasi Budaya Bogor</p>
+        <button onclick="loginGoogle()">Masuk dengan Google</button>
+    </div>
+
+    <div id="p-beranda" class="page">
+        <h2 id="helloUser">Sampurasun!</h2>
+        <div style="background: #1e293b; padding: 15px; border-radius: 15px;">
+            <h3>📷 Smart Scan AI</h3>
+            <video id="webcam" autoplay playsinline></video>
+            <div id="res" style="margin-top:10px; font-weight:bold; color:var(--accent);"></div>
+            <button id="btnScan" onclick="toggleScan()">MULAI SCAN AI</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pakai Config asli lo tadi
+    const firebaseConfig = {
+        apiKey: "AIzaSyCJomw3JHyUdncNlghrqjVedVO6UKelTY0",
+        authDomain: "sundasmart-7e792.firebaseapp.com",
+        projectId: "sundasmart-7e792",
+        storageBucket: "sundasmart-7e792.firebasestorage.app",
+        messagingSenderId: "1004706509586",
+        appId: "1:1004706509586:web:091f09c916079362a2f9cb"
+    };
+
+    // Inisialisasi
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    function loginGoogle() {
+        auth.signInWithPopup(provider).then((res) => {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('p-beranda').classList.add('active');
+            document.getElementById('helloUser').innerText = "Sampurasun, " + res.user.displayName + "!";
+            initAI();
+        }).catch((err) => { alert("Gagal Login: " + err.message); });
+    }
+
+    let model;
+    async function initAI() { model = await mobilenet.load(); }
+
+    async function toggleScan() {
+        const v = document.getElementById('webcam');
+        const r = document.getElementById('res');
+        if (v.style.display === "none" || v.style.display === "") {
+            const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            v.srcObject = s; v.style.display = "block";
+            setInterval(async () => {
+                const p = await model.classify(v);
+                let name = p[0].className.toLowerCase();
+                let sunda = "Duka naon...";
+                if(name.includes("hand")) sunda = "Panangan (Tangan)";
+                if(name.includes("chair")) sunda = "Korsi (Kursi)";
+                r.innerHTML = "AI Melihat: " + sunda;
+            }, 2000);
+        } else {
+            v.style.display = "none";
+        }
+    }
+</script>
+</body>
+</html>
