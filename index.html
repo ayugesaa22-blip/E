@@ -1,63 +1,51 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SundaSmart V6 - Test</title>
+    <title>SundaSmart V6</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-
     <style>
-        body { font-family: sans-serif; background-color: #0f172a; color: white; margin: 0; padding: 20px; text-align: center; }
-        .card { background: #1e293b; padding: 20px; border-radius: 15px; margin-top: 50px; border: 2px solid #4caf50; }
-        button { background: #ffa000; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; }
-        h1 { color: #4caf50; }
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 50px 20px; }
+        .box { background: #1e293b; padding: 30px; border-radius: 20px; border: 2px solid #4caf50; }
+        button { background: #ffa000; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-    <div id="loginPage">
+    <div class="box">
         <h1>🌿 SundaSmart</h1>
         <p>Aplikasi Budaya Bogor</p>
-        <div class="card">
-            <p>Klik tombol di bawah untuk masuk:</p>
+        <div id="loginSection">
             <button onclick="loginGoogle()">MASUK DENGAN GOOGLE</button>
         </div>
-    </div>
-
-    <div id="homePage" style="display:none;">
-        <h1 id="userGreeting">Sampurasun!</h1>
-        <div class="card">
-            <p>Selamat! Akun lo udah nyambung.</p>
-            <p>Sekarang lo udah jadi Jawara SundaSmart.</p>
+        <div id="homeSection" style="display:none;">
+            <h2 id="greet"></h2>
+            <p>Wilujeng Sumping di Sundasmart!</p>
         </div>
     </div>
 
 <script>
-    // Konfigurasi asli lo
     const firebaseConfig = {
-        apiKey: "AIzaSyCJomw3JHyUdncNlghrqjVedVO6UKelTY0",
-        authDomain: "sundasmart-7e792.firebaseapp.com",
-        projectId: "sundasmart-7e792",
-        storageBucket: "sundasmart-7e792.firebasestorage.app",
-        messagingSenderId: "1004706509586",
-        appId: "1:1004706509586:web:091f09c916079362a2f9cb"
+      apiKey: "AIzaSyCJomw3JHyUdncNlghrqjVedVO6UKelTY0",
+      authDomain: "sundasmart-7e792.firebaseapp.com",
+      projectId: "sundasmart-7e792",
+      storageBucket: "sundasmart-7e792.firebasestorage.app",
+      messagingSenderId: "1004706509586",
+      appId: "1:1004706509586:web:091f09c916079362a2f9cb"
     };
 
-    // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
 
     function loginGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider)
-            .then((result) => {
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('homePage').style.display = 'block';
-                document.getElementById('userGreeting').innerText = "Sampurasun, " + result.user.displayName + "!";
-            })
-            .catch((error) => {
-                alert("Error Login: " + error.message);
-            });
+        firebase.auth().signInWithPopup(provider).then((res) => {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('homeSection').style.display = 'block';
+            document.getElementById('greet').innerText = "Sampurasun, " + res.user.displayName + "!";
+        }).catch((err) => {
+            alert("Gagal: " + err.message);
+        });
     }
 </script>
 </body>
