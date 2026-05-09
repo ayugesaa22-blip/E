@@ -1,44 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SundaSmart V6 - Guest Mode</title>
+    <title>SundaSmart V6.2 - Guest Mode</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
     <style>
-        :root { --primary: #1b5e20; --accent: #ffa000; --bg: #0f172a; }
-        body { font-family: sans-serif; background: var(--bg); color: white; text-align: center; padding: 40px 20px; }
-        .box { background: #1e293b; padding: 30px; border-radius: 20px; border: 2px solid var(--primary); max-width: 400px; margin: auto; }
-        button { border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 14px; }
+        :root { --primary: #1b5e20; --secondary: #4caf50; --accent: #ffa000; --bg: #0f172a; --text: #f8fafc; }
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .phone-container { width: 100%; max-width: 400px; background: #1e293b; border-radius: 25px; padding: 30px; border: 2px solid var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        .hidden { display: none; }
+        h1 { color: var(--secondary); margin-bottom: 5px; }
+        .btn { border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 14px; transition: 0.3s; }
         .btn-google { background: white; color: #444; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-guest { background: var(--accent); color: white; }
-        .hidden { display: none; }
-        .status-badge { background: #334155; padding: 5px 10px; border-radius: 5px; font-size: 12px; color: #94a3b8; }
+        .btn-logout { background: #ef4444; color: white; margin-top: 30px; }
+        .status-badge { background: #334155; padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #94a3b8; display: inline-block; margin-bottom: 20px; }
+        .icon { font-size: 50px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>🌿 SundaSmart</h1>
-        <p>Aplikasi Budaya Bogor</p>
+
+<div class="phone-container">
+    <div id="loginSection">
+        <div class="icon">🌿</div>
+        <h1>SundaSmart</h1>
+        <p style="color: #94a3b8; font-size: 14px;">Aplikasi Budaya Bogor</p>
         
-        <div id="loginSection">
-            <button class="btn-google" onclick="loginGoogle()">
+        <div style="margin-top: 40px;">
+            <button class="btn btn-google" onclick="loginGoogle()">
                 <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18"> Masuk dengan Google
             </button>
-            <div style="margin: 15px 0; color: #64748b; font-size: 12px;">— ATAU —</div>
-            <button class="btn-guest" onclick="loginGuest()">Masuk sebagai Tamu</button>
-        </div>
-
-        <div id="homeSection" class="hidden">
-            <div class="status-badge" id="userStatus">Status: Tamu</div>
-            <h2 id="greet">Sampurasun!</h2>
-            <p>Wilujeng Sumping di SundaSmart. Sekarang lo bisa akses fitur budaya Bogor!</p>
-            <button onclick="location.reload()" style="background:#ef4444; color:white;">Keluar</button>
+            
+            <div style="margin: 20px 0; color: #64748b; font-size: 12px;">— ATAU —</div>
+            
+            <button class="btn btn-guest" onclick="loginGuest()">Masuk sebagai Tamu</button>
         </div>
     </div>
 
+    <div id="homeSection" class="hidden">
+        <div class="status-badge" id="userStatus">Status: Member</div>
+        <div class="icon">✨</div>
+        <h2 id="greet">Sampurasun!</h2>
+        <p style="color: #94a3b8;">Wilujeng Sumping di SundaSmart. Sekarang lo sudah bisa akses semua fitur budaya Bogor.</p>
+        
+        <div style="background: #0f172a; padding: 20px; border-radius: 15px; margin-top: 20px; border-left: 4px solid var(--accent);">
+            <p style="margin: 0; font-size: 13px;">💡 <b>Tips:</b> Gunakan fitur Scan AI (segera hadir) untuk belajar bahasa Sunda dari benda di sekitar lo!</p>
+        </div>
+
+        <button class="btn btn-logout" onclick="logout()">Keluar Aplikasi</button>
+    </div>
+</div>
+
 <script>
+    // Konfigurasi Firebase lo (Gestira's Config)
     const firebaseConfig = {
       apiKey: "AIzaSyCJomw3JHyUdncNlghrqjVedVO6UKelTY0",
       authDomain: "sundasmart-7e792.firebaseapp.com",
@@ -48,14 +65,19 @@
       appId: "1:1004706509586:web:091f09c916079362a2f9cb"
     };
 
+    // Inisialisasi
     firebase.initializeApp(firebaseConfig);
 
     // Fungsi Login Google
     function loginGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider).then((res) => {
-            showHome("Sampurasun, " + res.user.displayName + "!", "Member");
-        }).catch((err) => { alert("Gagal: " + err.message); });
+        firebase.auth().signInWithPopup(provider)
+            .then((res) => {
+                showHome("Sampurasun, " + res.user.displayName + "!", "Member");
+            })
+            .catch((err) => {
+                alert("Waduh, gagal login: " + err.message);
+            });
     }
 
     // Fungsi Login Guest
@@ -63,12 +85,21 @@
         showHome("Sampurasun, Tamu!", "Guest");
     }
 
+    // Fungsi pindah layar
     function showHome(message, status) {
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('homeSection').classList.remove('hidden');
         document.getElementById('greet').innerText = message;
         document.getElementById('userStatus').innerText = "Status: " + status;
     }
+
+    // Fungsi Logout
+    function logout() {
+        firebase.auth().signOut().then(() => {
+            location.reload();
+        });
+    }
 </script>
+
 </body>
 </html>
